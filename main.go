@@ -6,6 +6,9 @@ import (
 	"log"
 	"net/http"
 	"sort"
+	"time"
+
+	"gopkg.in/tylerb/graceful.v1"
 )
 
 var port string
@@ -18,7 +21,10 @@ func main() {
 	flag.Parse()
 	http.HandleFunc("/", handler)
 	log.Println("Starting server on port: " + port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	err := graceful.RunWithErr(":"+port, 2*time.Second, http.DefaultServeMux)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {

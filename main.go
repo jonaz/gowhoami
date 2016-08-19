@@ -21,10 +21,11 @@ func main() {
 	flag.Parse()
 	http.HandleFunc("/", handler)
 	log.Println("Starting server on port: " + port)
-	err := graceful.RunWithErr(":"+port, 2*time.Second, http.DefaultServeMux)
+	err := graceful.RunWithErr(":"+port, 10*time.Second, http.DefaultServeMux)
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("Stopped")
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {

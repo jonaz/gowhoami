@@ -12,9 +12,11 @@ import (
 )
 
 var port string
+var debug bool
 
 func init() {
 	flag.StringVar(&port, "p", "8080", "Port to listen on")
+	flag.BoolVar(&debug, "d", true, "debug. Print all requests")
 }
 
 func main() {
@@ -44,5 +46,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "%s:%s\n", v, r.Header.Get(v))
 	}
 
-	log.Printf("| %s | %s | %s", r.RemoteAddr, r.Method, r.RequestURI)
+	if debug {
+		log.Printf("| %s | %s | %s", r.RemoteAddr, r.Method, r.RequestURI)
+	}
 }

@@ -22,8 +22,8 @@ spec:
             cpu: 200m
             memory: 100Mi
           requests:
-            cpu: 200m
-            memory: 100Mi
+            cpu: 50m
+            memory: 50Mi
         name: gowhoami
         ports:
         - containerPort: 8080

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"sort"
 	"time"
 
@@ -31,6 +32,13 @@ func main() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
+	hostname, err := os.Hostname()
+	if err != nil {
+		fmt.Fprintf(w, "Error: %s\n", err.Error())
+		return
+	}
+
+	fmt.Fprintf(w, "Hostname: %s\n", hostname)
 	fmt.Fprintf(w, "RemoteAddr: %s\n", r.RemoteAddr)
 	fmt.Fprintf(w, "Host: %s\n", r.Host)
 	fmt.Fprintf(w, "Protocol: %s\n", r.Proto)

@@ -9,6 +9,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"gopkg.in/tylerb/graceful.v1"
 )
 
@@ -22,6 +23,14 @@ func init() {
 
 func main() {
 	flag.Parse()
+
+	logrus.SetFormatter(&logrus.JSONFormatter{TimestampFormat: time.RFC3339Nano})
+
+	http.HandleFunc("/api/gowhoami/log", func(w http.ResponseWriter, r *http.Request) {
+		logrus.WithFields(logrus.Fields{
+			"field1": "test",
+		}).Info("Test logging")
+	})
 	http.HandleFunc("/", handler)
 	log.Println("Starting server on port: " + port)
 	err := graceful.RunWithErr(":"+port, 10*time.Second, http.DefaultServeMux)
@@ -56,5 +65,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	if debug {
 		log.Printf("| %s | %s | %s", r.RemoteAddr, r.Method, r.RequestURI)
+		log.Printf("Host: %s\n", r.Host)
+		for _, v := range keys {
+			log.Printf("%s:%s\n", v, r.Header.Get(v))
+		}
 	}
 }

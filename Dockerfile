@@ -1,8 +1,5 @@
-FROM ubuntu:latest
-RUN useradd -u 1001 gowhoami
-
-FROM scratch
-COPY --from=0 /etc/passwd /etc/passwd
+FROM alpine:3.13
+RUN adduser -u 1001 -D gowhoami
 COPY gowhoami /
-USER gowhoami
+USER 1001
 ENTRYPOINT ["/gowhoami"]

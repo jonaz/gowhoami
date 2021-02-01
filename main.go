@@ -1,20 +1,24 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"sort"
+	"syscall"
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"gopkg.in/tylerb/graceful.v1"
 )
 
-var port string
-var debug bool
+var (
+	port  string
+	debug bool
+)
 
 func init() {
 	flag.StringVar(&port, "p", "8080", "Port to listen on")
@@ -33,10 +37,14 @@ func main() {
 	})
 	http.HandleFunc("/", handler)
 	log.Println("Starting server on port: " + port)
-	err := graceful.RunWithErr(":"+port, 10*time.Second, http.DefaultServeMux)
-	if err != nil {
-		log.Fatal(err)
-	}
+
+	server, shutdown := NewServerWithTimeout(10 * time.Second)
+	server.Handler = http.DefaultServeMux
+	server.Addr = ":" + port
+
+	log.Println(server.ListenAndServe())
+
+	<-shutdown
 	log.Println("Stopped")
 }
 
@@ -70,4 +78,28 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("%s:%s\n", v, r.Header.Get(v))
 		}
 	}
+}
+
+func NewServerWithTimeout(t time.Duration) (*http.Server, chan struct{}) {
+	shutdown := make(chan struct{})
+	srv := &http.Server{}
+
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt, syscall.SIGQUIT, syscall.SIGTERM)
+	go func() {
+		<-quit
+		log.Println("gograce: Shutdown Server ...")
+
+		time.Sleep(5 * time.Second)
+
+		ctx, cancel := context.WithTimeout(context.Background(), t)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			log.Println("gograce: error server shutdown:", err)
+		}
+		close(shutdown)
+		log.Println("gograce: server exited")
+	}()
+
+	return srv, shutdown
 }

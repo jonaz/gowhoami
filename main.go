@@ -19,10 +19,12 @@ import (
 var (
 	port       string
 	debug      bool
+	messages   msgFlags
 	allowSleep bool
 )
 
 func init() {
+	flag.Var(&messages, "msg", "custom message to print out. can be used multiple times")
 	flag.StringVar(&port, "p", "8080", "Port to listen on")
 	flag.BoolVar(&debug, "d", true, "debug. Print all requests")
 	flag.BoolVar(&allowSleep, "allow-sleep", true, "Allows ?sleep=<second> query parameter")
@@ -58,6 +60,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for _, msg := range messages {
+		fmt.Fprintf(w, "%s\n", msg)
+	}
 	fmt.Fprintf(w, "Hostname: %s\n", hostname)
 	fmt.Fprintf(w, "RemoteAddr: %s\n", r.RemoteAddr)
 	fmt.Fprintf(w, "Host: %s\n", r.Host)

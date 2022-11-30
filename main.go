@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"sort"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -16,13 +17,15 @@ import (
 )
 
 var (
-	port  string
-	debug bool
+	port       string
+	debug      bool
+	allowSleep bool
 )
 
 func init() {
 	flag.StringVar(&port, "p", "8080", "Port to listen on")
 	flag.BoolVar(&debug, "d", true, "debug. Print all requests")
+	flag.BoolVar(&allowSleep, "allow-sleep", true, "Allows ?sleep=<second> query parameter")
 }
 
 func main() {
@@ -77,6 +80,19 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		for _, v := range keys {
 			log.Printf("%s:%s\n", v, r.Header.Get(v))
 		}
+	}
+
+	if allowSleep {
+		strTime := r.URL.Query().Get("sleep")
+		if strTime == "" {
+			return
+		}
+		t, err := strconv.Atoi(strTime)
+		if err != nil {
+			logrus.Error(err)
+			fmt.Fprintf(w, "error: %s\n", err.Error())
+		}
+		time.Sleep(time.Duration(t) * time.Second)
 	}
 }
 

@@ -67,6 +67,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "RemoteAddr: %s\n", r.RemoteAddr)
 	fmt.Fprintf(w, "Host: %s\n", r.Host)
 	fmt.Fprintf(w, "Protocol: %s\n", r.Proto)
+	fmt.Fprintf(w, "Path: %s\n", r.URL.Path)
 
 	keys := make([]string, 0, len(r.Header))
 	for key := range r.Header {

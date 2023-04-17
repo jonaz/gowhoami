@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/signal"
 	"sort"
-	"strconv"
 	"syscall"
 	"time"
 
@@ -27,7 +26,7 @@ func init() {
 	flag.Var(&messages, "msg", "custom message to print out. can be used multiple times")
 	flag.StringVar(&port, "p", "8080", "Port to listen on")
 	flag.BoolVar(&debug, "d", true, "debug. Print all requests")
-	flag.BoolVar(&allowSleep, "allow-sleep", true, "Allows ?sleep=<second> query parameter")
+	flag.BoolVar(&allowSleep, "allow-sleep", true, "Allows ?sleep=<duration> query parameter")
 }
 
 func main() {
@@ -35,7 +34,7 @@ func main() {
 
 	logrus.SetFormatter(&logrus.JSONFormatter{TimestampFormat: time.RFC3339Nano})
 
-	http.HandleFunc("/api/gowhoami/log", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/api/gowhoami/log", func(_ http.ResponseWriter, _ *http.Request) {
 		logrus.WithFields(logrus.Fields{
 			"field1": "test",
 		}).Info("Test logging")
@@ -93,12 +92,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		if strTime == "" {
 			return
 		}
-		t, err := strconv.Atoi(strTime)
+		dur, err := time.ParseDuration(strTime)
 		if err != nil {
 			logrus.Error(err)
 			fmt.Fprintf(w, "error: %s\n", err.Error())
+			return
 		}
-		time.Sleep(time.Duration(t) * time.Second)
+		time.Sleep(dur)
 	}
 }
 
@@ -106,7 +106,7 @@ func NewServerWithTimeout(t time.Duration) (*http.Server, chan struct{}) {
 	shutdown := make(chan struct{})
 	srv := &http.Server{}
 
-	quit := make(chan os.Signal)
+	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGQUIT, syscall.SIGTERM)
 	go func() {
 		<-quit

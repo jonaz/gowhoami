@@ -18,7 +18,7 @@ spec:
         version: "1"
     spec:
       containers:
-      - image: jonazz/gowhoami:0.0.3
+      - image: jonazz/gowhoami:0.0.4
         imagePullPolicy: Always
         args:
           - -d=false
